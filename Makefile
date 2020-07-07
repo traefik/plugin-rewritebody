@@ -1,6 +1,6 @@
-export GO111MODULE=on
+.PHONY: lint test vendor clean
 
-.PHONY: lint test clean
+export GO111MODULE=on
 
 default: lint test
 
@@ -9,3 +9,9 @@ lint:
 
 test:
 	go test -v -cover ./...
+
+vendor:
+	go mod vendor
+
+clean:
+	rm -rf ./vendor
