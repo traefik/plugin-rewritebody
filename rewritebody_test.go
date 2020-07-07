@@ -14,8 +14,10 @@ func TestServeHTTP(t *testing.T) {
 		desc            string
 		contentEncoding string
 		rewrites        []Rewrite
+		lastModified    bool
 		resBody         string
 		expResBody      string
+		expLastModified bool
 	}{
 		{
 			desc: "should replace foo by bar",
@@ -44,7 +46,7 @@ func TestServeHTTP(t *testing.T) {
 			expResBody: "foo is the new foo",
 		},
 		{
-			desc: "should not replace anything if contentEncoding is not identity or empty",
+			desc: "should not replace anything if content encoding is not identity or empty",
 			rewrites: []Rewrite{
 				{
 					Regex:       "foo",
@@ -56,7 +58,7 @@ func TestServeHTTP(t *testing.T) {
 			expResBody:      "foo is the new bar",
 		},
 		{
-			desc: "should replace foo by bar if contentEncoding is identity",
+			desc: "should replace foo by bar if content encoding is identity",
 			rewrites: []Rewrite{
 				{
 					Regex:       "foo",
@@ -67,16 +69,33 @@ func TestServeHTTP(t *testing.T) {
 			resBody:         "foo is the new bar",
 			expResBody:      "bar is the new bar",
 		},
+		{
+			desc: "should not remove the last modified header",
+			rewrites: []Rewrite{
+				{
+					Regex:       "foo",
+					Replacement: "bar",
+				},
+			},
+			contentEncoding: "identity",
+			lastModified:    true,
+			resBody:         "foo is the new bar",
+			expResBody:      "bar is the new bar",
+			expLastModified: true,
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			config := &Config{
-				Rewrites: test.rewrites,
+				LastModified: test.lastModified,
+				Rewrites:     test.rewrites,
 			}
 
 			next := func(rw http.ResponseWriter, req *http.Request) {
 				rw.Header().Set("Content-Encoding", test.contentEncoding)
+				rw.Header().Set("Last-Modified", "Thu, 02 Jun 2016 06:01:08 GMT")
+
 				rw.WriteHeader(http.StatusOK)
 
 				_, _ = fmt.Fprintf(rw, test.resBody)
@@ -91,6 +110,10 @@ func TestServeHTTP(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 
 			rewriteBody.ServeHTTP(recorder, req)
+
+			if _, exists := recorder.Result().Header["Last-Modified"]; exists != test.expLastModified {
+				t.Errorf("got last-modified header %v, want %v", exists, test.expLastModified)
+			}
 
 			if !bytes.Equal([]byte(test.expResBody), recorder.Body.Bytes()) {
 				t.Errorf("got body %q, want %q", recorder.Body.Bytes(), test.expResBody)

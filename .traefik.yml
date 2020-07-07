@@ -4,6 +4,7 @@ type: middleware
 import: github.com/containous/plugin-rewritebody
 compatibility: TODO
 testData:
+  lastModified: true
   rewrites:
     - regex: "bar"
       replacement: "foo"

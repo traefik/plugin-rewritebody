@@ -29,9 +29,13 @@ and uses the `rewritebody` middleware plugin to replace all foo occurences by ba
     middlewares = ["rewrite-foo"]
     service = "my-service"
 
-# Block all paths starting with /foo
 [http.middlewares]
   [http.middlewares.rewrite-foo.rewritebody]
+    # Keep Last-Modified header returned by the HTTP service.
+    # By default, the Last-Modified header is removed.
+    lastModified = true
+
+    # Rewrites all "foo" occurences by "bar"
     [[http.middlewares.rewrite-foo.plugin.rewritebody.rewrites]]
       regex = "foo"
       replacement = "bar"
