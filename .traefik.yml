@@ -1,0 +1,10 @@
+displayName: Rewrite Body
+summary: Body Rewrite plugin middleware modifies a response by replacing one specified string by another.
+type: middleware
+import: github.com/containous/plugin-rewritebody
+compatibility: TODO
+testData:
+  rewrites:
+    rewrite:
+      regex: "bar"
+      replacement: "foo"
