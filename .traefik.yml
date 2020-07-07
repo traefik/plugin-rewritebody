@@ -7,3 +7,4 @@ testData:
   rewrites:
     - regex: "bar"
       replacement: "foo"
+ 
