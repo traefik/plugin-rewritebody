@@ -33,7 +33,7 @@ type rewrite struct {
 type rewriteBody struct {
 	name     string
 	next     http.Handler
-	rewrites []*rewrite
+	rewrites []rewrite
 }
 
 type bufferedResponseWriter struct {
@@ -47,14 +47,14 @@ func (b *bufferedResponseWriter) Write(p []byte) (int, error) {
 
 // New creates a new handler.
 func New(_ context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
-	rewrites := make([]*rewrite, len(config.Rewrites))
+	rewrites := make([]rewrite, len(config.Rewrites))
 	for i, rewriteConfig := range config.Rewrites {
 		filterRegexp, err := regexp.Compile(rewriteConfig.Regex)
 		if err != nil {
 			return nil, fmt.Errorf("error compiling regex expression %q: %w", rewriteConfig.Regex, err)
 		}
 
-		rewrites[i] = &rewrite{
+		rewrites[i] = rewrite{
 			regex:       filterRegexp,
 			replacement: []byte(rewriteConfig.Replacement),
 		}

@@ -18,7 +18,7 @@ func TestServeHTTP(t *testing.T) {
 		expResBody      string
 	}{
 		{
-			desc: "Should replace foo by bar",
+			desc: "should replace foo by bar",
 			rewrites: []Rewrite{
 				{
 					Regex:       "foo",
@@ -29,7 +29,7 @@ func TestServeHTTP(t *testing.T) {
 			expResBody: "bar is the new bar",
 		},
 		{
-			desc: "Should replace foo by bar, then by foo",
+			desc: "should replace foo by bar, then by foo",
 			rewrites: []Rewrite{
 				{
 					Regex:       "foo",
@@ -44,7 +44,7 @@ func TestServeHTTP(t *testing.T) {
 			expResBody: "foo is the new foo",
 		},
 		{
-			desc: "Should not replace anything if contentEncoding is not identity or empty",
+			desc: "should not replace anything if contentEncoding is not identity or empty",
 			rewrites: []Rewrite{
 				{
 					Regex:       "foo",
@@ -56,7 +56,7 @@ func TestServeHTTP(t *testing.T) {
 			expResBody:      "foo is the new bar",
 		},
 		{
-			desc: "Should replace foo by bar if contentEncoding is identity",
+			desc: "should replace foo by bar if contentEncoding is identity",
 			rewrites: []Rewrite{
 				{
 					Regex:       "foo",
@@ -75,25 +75,25 @@ func TestServeHTTP(t *testing.T) {
 				Rewrites: test.rewrites,
 			}
 
-			nextHandler := func(rw http.ResponseWriter, req *http.Request) {
+			next := func(rw http.ResponseWriter, req *http.Request) {
 				rw.Header().Set("Content-Encoding", test.contentEncoding)
 				rw.WriteHeader(http.StatusOK)
 
 				_, _ = fmt.Fprintf(rw, test.resBody)
 			}
 
-			rewriteBody, err := New(context.Background(), http.HandlerFunc(nextHandler), config, "rewriteBody")
+			rewriteBody, err := New(context.Background(), http.HandlerFunc(next), config, "rewriteBody")
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			resRecorder := httptest.NewRecorder()
+			recorder := httptest.NewRecorder()
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 
-			rewriteBody.ServeHTTP(resRecorder, req)
+			rewriteBody.ServeHTTP(recorder, req)
 
-			if !bytes.Equal([]byte(test.expResBody), resRecorder.Body.Bytes()) {
-				t.Errorf("got body %q, want %q", resRecorder.Body.Bytes(), test.expResBody)
+			if !bytes.Equal([]byte(test.expResBody), recorder.Body.Bytes()) {
+				t.Errorf("got body %q, want %q", recorder.Body.Bytes(), test.expResBody)
 			}
 		})
 	}
@@ -106,7 +106,7 @@ func TestNew(t *testing.T) {
 		expErr   bool
 	}{
 		{
-			desc: "Should return no error",
+			desc: "should return no error",
 			rewrites: []Rewrite{
 				{
 					Regex:       "foo",
@@ -120,7 +120,7 @@ func TestNew(t *testing.T) {
 			expErr: false,
 		},
 		{
-			desc: "Should return an error",
+			desc: "should return an error",
 			rewrites: []Rewrite{
 				{
 					Regex:       "*",
