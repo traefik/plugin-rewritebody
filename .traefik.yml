@@ -5,6 +5,5 @@ import: github.com/containous/plugin-rewritebody
 compatibility: TODO
 testData:
   rewrites:
-    rewrite:
-      regex: "bar"
+    - regex: "bar"
       replacement: "foo"
