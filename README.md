@@ -1,46 +1,44 @@
 # Body Rewrite
 
-Body Rewrite plugin middleware modifies a response by replacing one specified string by another.
+Body Rewrite is a middleware plugin for [Traefik](https://github.com/containous/traefik) which rewrites the HTTP response body
+by replacing a search regex by a replacement string.
 
 ## Configuration
 
-To configure this plugin you should add its configuration to the Traefik dynamic configuration as explained [here](https://docs.traefik.io/getting-started/configuration-overview/#the-dynamic-configuration).
-The following snippet shows how to configure this plugin with the File provider in TOML and YAML: 
-
-
-Static:
+### Static
 
 ```toml
 [experimental.pilot]
   token = "xxxx"
-[experimental.plugins.tomato]
+
+[experimental.plugins.rewritebody]
   modulename = "github.com/containous/plugin-rewritebody"
-  version = "v0.1.0"
+  version = "v0.1.1"
 ```
 
-Dynamic:
+### Dynamic
+
+To configure the `Rewrite Body` plugin you should create a [middleware](https://docs.traefik.io/middlewares/overview/) in 
+your dynamic configuration as explained [here](https://docs.traefik.io/middlewares/overview/). The following example creates
+and uses the `rewritebody` middleware plugin to replace all foo occurences by bar in the HTTP response body.
 
 ```toml
-  [http.middlewares]
-    [http.middlewares.my-rewritebody.plugin.rewritebody]
-        [[http.middlewares.my-rewritebody.plugin.rewritebody.rewrites]]
-            regex = "foo"
-            replacement = "bar"
+[http.routers]
+  [http.routers.my-router]
+    rule = "Host(`localhost`)"
+    middlewares = ["rewrite-foo"]
+    service = "my-service"
 
-        [[http.middlewares.my-rewritebody.plugin.rewritebody.rewrites]]
-            regex = "bar"
-            replacement = "foobar"
-```
+# Block all paths starting with /foo
+[http.middlewares]
+  [http.middlewares.rewrite-foo.rewritebody]
+    [[http.middlewares.rewrite-foo.plugin.rewritebody.rewrites]]
+      regex = "foo"
+      replacement = "bar"
 
-```yaml
-http:
-  middlewares:
-    my-rewritebody:
-      plugin:  
-        rewritebody:
-          rewrites:
-            - regex: "foo"
-              replacement: "bar"
-            - regex: "bar"
-              replacement: "foobar"
+[http.services]
+  [http.services.my-service]
+    [http.services.my-service.loadBalancer]
+      [[http.services.my-service.loadBalancer.servers]]
+        url = "http://127.0.0.1"
 ```

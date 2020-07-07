@@ -1,5 +1,5 @@
 displayName: Rewrite Body
-summary: Body Rewrite plugin middleware modifies a response by replacing one specified string by another.
+summary: Rewrites the HTTP response body by replacing a search regex by a replacement string.
 type: middleware
 import: github.com/containous/plugin-rewritebody
 compatibility: TODO
