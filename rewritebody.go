@@ -111,7 +111,7 @@ func (r *responseWriter) WriteHeader(statusCode int) {
 
 func (r *responseWriter) Write(p []byte) (int, error) {
 	if !r.wroteHeader {
-		r.ResponseWriter.WriteHeader(http.StatusOK)
+		r.WriteHeader(http.StatusOK)
 	}
 
 	return r.buffer.Write(p)
