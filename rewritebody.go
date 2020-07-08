@@ -2,10 +2,12 @@
 package plugin_rewritebody
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"regexp"
 )
@@ -39,25 +41,6 @@ type rewriteBody struct {
 	lastModified bool
 }
 
-type responseWriterWrapper struct {
-	buffer       bytes.Buffer
-	lastModified bool
-
-	http.ResponseWriter
-}
-
-func (r *responseWriterWrapper) WriteHeader(statusCode int) {
-	if !r.lastModified {
-		r.ResponseWriter.Header().Del("Last-Modified")
-	}
-
-	r.ResponseWriter.WriteHeader(statusCode)
-}
-
-func (r *responseWriterWrapper) Write(p []byte) (int, error) {
-	return r.buffer.Write(p)
-}
-
 // New creates and returns a new rewrite body plugin instance.
 func New(_ context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
 	rewrites := make([]rewrite, len(config.Rewrites))
@@ -83,16 +66,16 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 }
 
 func (r *rewriteBody) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	rww := &responseWriterWrapper{
+	wrappedWriter := &responseWriter{
 		lastModified:   r.lastModified,
 		ResponseWriter: rw,
 	}
 
-	r.next.ServeHTTP(rww, req)
+	r.next.ServeHTTP(wrappedWriter, req)
 
-	bodyBytes := rww.buffer.Bytes()
+	bodyBytes := wrappedWriter.buffer.Bytes()
 
-	if contentEncoding := rww.Header().Get("Content-Encoding"); contentEncoding != "" && contentEncoding != "identity" {
+	if contentEncoding := wrappedWriter.Header().Get("Content-Encoding"); contentEncoding != "" && contentEncoding != "identity" {
 		if _, err := rw.Write(bodyBytes); err != nil {
 			log.Printf("unable to write body: %v", err)
 		}
@@ -106,5 +89,45 @@ func (r *rewriteBody) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	if _, err := rw.Write(bodyBytes); err != nil {
 		log.Printf("unable to write rewrited body: %v", err)
+	}
+}
+
+type responseWriter struct {
+	buffer       bytes.Buffer
+	lastModified bool
+	wroteHeader  bool
+
+	http.ResponseWriter
+}
+
+func (r *responseWriter) WriteHeader(statusCode int) {
+	if !r.lastModified {
+		r.ResponseWriter.Header().Del("Last-Modified")
+	}
+
+	r.wroteHeader = true
+	r.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (r *responseWriter) Write(p []byte) (int, error) {
+	if !r.wroteHeader {
+		r.ResponseWriter.WriteHeader(http.StatusOK)
+	}
+
+	return r.buffer.Write(p)
+}
+
+func (r *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hijacker, ok := r.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, fmt.Errorf("%T is not a http.Hijacker", r.ResponseWriter)
+	}
+
+	return hijacker.Hijack()
+}
+
+func (r *responseWriter) Flush() {
+	if flusher, ok := r.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
 	}
 }
