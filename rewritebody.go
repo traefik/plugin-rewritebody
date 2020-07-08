@@ -75,7 +75,9 @@ func (r *rewriteBody) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	bodyBytes := wrappedWriter.buffer.Bytes()
 
-	if contentEncoding := wrappedWriter.Header().Get("Content-Encoding"); contentEncoding != "" && contentEncoding != "identity" {
+	contentEncoding := wrappedWriter.Header().Get("Content-Encoding")
+
+	if contentEncoding != "" && contentEncoding != "identity" {
 		if _, err := rw.Write(bodyBytes); err != nil {
 			log.Printf("unable to write body: %v", err)
 		}
