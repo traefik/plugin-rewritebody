@@ -22,6 +22,8 @@ To configure the `Rewrite Body` plugin you should create a [middleware](https://
 your dynamic configuration as explained [here](https://docs.traefik.io/middlewares/overview/). The following example creates
 and uses the `rewritebody` middleware plugin to replace all foo occurences by bar in the HTTP response body.
 
+If you want to apply some limits on the response body, you can chain this middleware plugin with the [Buffering middleware](https://docs.traefik.io/middlewares/buffering/) from Traefik.
+
 ```toml
 [http.routers]
   [http.routers.my-router]
