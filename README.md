@@ -32,7 +32,7 @@ If you want to apply some limits on the response body, you can chain this middle
     service = "my-service"
 
 [http.middlewares]
-  [http.middlewares.rewrite-foo.rewritebody]
+  [http.middlewares.rewrite-foo.plugin.rewritebody]
     # Keep Last-Modified header returned by the HTTP service.
     # By default, the Last-Modified header is removed.
     lastModified = true
