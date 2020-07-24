@@ -109,7 +109,7 @@ func (r *responseWriter) WriteHeader(statusCode int) {
 
 	r.wroteHeader = true
 
-	r.Header().Del("Content-Length")
+	r.ResponseWriter.Header().Del("Content-Length")
 
 	r.ResponseWriter.WriteHeader(statusCode)
 }
