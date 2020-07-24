@@ -109,6 +109,7 @@ func (r *responseWriter) WriteHeader(statusCode int) {
 
 	r.wroteHeader = true
 
+	// Delegates the Content-Length Header creation to the final body write.
 	r.ResponseWriter.Header().Del("Content-Length")
 
 	r.ResponseWriter.WriteHeader(statusCode)
