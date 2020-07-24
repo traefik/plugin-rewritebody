@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 )
 
@@ -95,7 +96,7 @@ func TestServeHTTP(t *testing.T) {
 			next := func(rw http.ResponseWriter, req *http.Request) {
 				rw.Header().Set("Content-Encoding", test.contentEncoding)
 				rw.Header().Set("Last-Modified", "Thu, 02 Jun 2016 06:01:08 GMT")
-
+				rw.Header().Set("Content-Length", strconv.Itoa(len(test.resBody)))
 				rw.WriteHeader(http.StatusOK)
 
 				_, _ = fmt.Fprintf(rw, test.resBody)
@@ -113,6 +114,10 @@ func TestServeHTTP(t *testing.T) {
 
 			if _, exists := recorder.Result().Header["Last-Modified"]; exists != test.expLastModified {
 				t.Errorf("got last-modified header %v, want %v", exists, test.expLastModified)
+			}
+
+			if _, exists := recorder.Result().Header["Content-Length"]; exists {
+				t.Error("The Content-Length Header must be deleted")
 			}
 
 			if !bytes.Equal([]byte(test.expResBody), recorder.Body.Bytes()) {
