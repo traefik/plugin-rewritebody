@@ -13,7 +13,7 @@ by replacing a search regex by a replacement string.
 
 [experimental.plugins.rewritebody]
   modulename = "github.com/containous/plugin-rewritebody"
-  version = "v0.2.1"
+  version = "v0.2.2"
 ```
 
 ### Dynamic
