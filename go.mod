@@ -1,3 +1,3 @@
-module github.com/containous/plugin-rewritebody
+module github.com/traefik/plugin-rewritebody
 
 go 1.14

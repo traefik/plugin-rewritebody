@@ -1,11 +1,10 @@
 displayName: Rewrite Body
 summary: Rewrites the HTTP response body by replacing a search regex by a replacement string.
 type: middleware
-import: github.com/containous/plugin-rewritebody
+import: github.com/traefik/plugin-rewritebody
 compatibility: TODO
 testData:
   lastModified: true
   rewrites:
     - regex: "bar"
       replacement: "foo"
- 
