@@ -8,12 +8,12 @@ by replacing a search regex by a replacement string.
 ### Static
 
 ```toml
-[experimental.pilot]
+[pilot]
   token = "xxxx"
 
 [experimental.plugins.rewritebody]
   modulename = "github.com/traefik/plugin-rewritebody"
-  version = "v0.2.2"
+  version = "v0.3.1"
 ```
 
 ### Dynamic
