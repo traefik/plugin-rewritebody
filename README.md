@@ -1,6 +1,6 @@
 # Rewrite Body
 
-Rewrite body is a middleware plugin for [Traefik](https://github.com/containous/traefik) which rewrites the HTTP response body
+Rewrite body is a middleware plugin for [Traefik](https://github.com/traefik/traefik) which rewrites the HTTP response body
 by replacing a search regex by a replacement string.
 
 ## Configuration
@@ -12,7 +12,7 @@ by replacing a search regex by a replacement string.
   token = "xxxx"
 
 [experimental.plugins.rewritebody]
-  modulename = "github.com/containous/plugin-rewritebody"
+  modulename = "github.com/traefik/plugin-rewritebody"
   version = "v0.2.2"
 ```
 
