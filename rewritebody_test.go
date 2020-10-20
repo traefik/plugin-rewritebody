@@ -84,6 +84,65 @@ func TestServeHTTP(t *testing.T) {
 			expResBody:      "bar is the new bar",
 			expLastModified: true,
 		},
+		{
+			desc: "should replace foo by the req.Host var",
+			rewrites: []Rewrite{
+				{
+					Regex:       "foo",
+					Replacement: "{.Host}",
+				},
+			},
+			resBody:    "foo is the new bar",
+			expResBody: "example.com is the new bar",
+		},
+		{
+			desc: "should replace foo by the req.Proto/req.Method vars",
+			rewrites: []Rewrite{
+				{
+					Regex:       "foo",
+					Replacement: "{.ContentLength} {.Method}",
+				},
+			},
+			resBody:    "foo is the new bar",
+			expResBody: "0 GET is the new bar",
+		},
+		{
+			desc: "should replace foo by {}",
+			rewrites: []Rewrite{
+				{
+					Regex:          "foo",
+					Replacement:    "{}",
+					DelimiterLeft:  "/",
+					DelimiterRight: "/",
+				},
+			},
+			resBody:    "foo is the new bar",
+			expResBody: "{} is the new bar",
+		},
+		{
+			desc: "should replace foo by Host with delimiters /",
+			rewrites: []Rewrite{
+				{
+					Regex:          "foo",
+					Replacement:    "/.Host/",
+					DelimiterLeft:  "/",
+					DelimiterRight: "/",
+				},
+			},
+			resBody:    "foo is {the} new bar",
+			expResBody: "example.com is {the} new bar",
+		},
+		{
+			desc: "Replacement with unavailable var should return nothing",
+			rewrites: []Rewrite{
+				{
+					Regex:       "foo",
+					Replacement: "{.Toto}",
+				},
+			},
+			resBody:    "foo is the new bar",
+			expResBody: "",
+		},
 	}
 
 	for _, test := range tests {
@@ -139,6 +198,22 @@ func TestNew(t *testing.T) {
 				{
 					Regex:       "foo",
 					Replacement: "bar",
+				},
+				{
+					Regex:       "bar",
+					Replacement: "foo",
+				},
+			},
+			expErr: false,
+		},
+		{
+			desc: "should return no error when adding delimiters",
+			rewrites: []Rewrite{
+				{
+					Regex:          "foo",
+					Replacement:    "bar",
+					DelimiterLeft:  "/",
+					DelimiterRight: "/",
 				},
 				{
 					Regex:       "bar",

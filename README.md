@@ -20,7 +20,10 @@ by replacing a search regex by a replacement string.
 
 To configure the `Rewrite Body` plugin you should create a [middleware](https://docs.traefik.io/middlewares/overview/) in 
 your dynamic configuration as explained [here](https://docs.traefik.io/middlewares/overview/). The following example creates
-and uses the `rewritebody` middleware plugin to replace all foo occurences by bar in the HTTP response body.
+and uses the `rewritebody` middleware plugin to replace all foo occurences by bar in the HTTP response body.`
+
+You can replace with variables from the `http.Request` variable. For example to get the `req.Host` variable use `{.Host}` in your
+replacement string. You can change the delimiter to use something different that the brackets. See examples for more information.
 
 If you want to apply some limits on the response body, you can chain this middleware plugin with the [Buffering middleware](https://docs.traefik.io/middlewares/buffering/) from Traefik.
 
@@ -41,6 +44,18 @@ If you want to apply some limits on the response body, you can chain this middle
     [[http.middlewares.rewrite-foo.plugin.rewritebody.rewrites]]
       regex = "foo"
       replacement = "bar"
+
+    # Rewrites all "bar" occurences by the host requested
+    [[http.middlewares.rewrite-foo.plugin.rewritebody.rewrites]]
+      regex = "bar"
+      replacement = "{.Host}"
+    
+    # Rewrites all "example.com" occurences by the Method requested and by changing the delimiters
+    [[http.middlewares.rewrite-foo.plugin.rewritebody.rewrites]]
+      regex = "example.com"
+      replacement = "/.Method/"
+      delimiterLeft = "/"
+      delimiterRight = "/"      
 
 [http.services]
   [http.services.my-service]
