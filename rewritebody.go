@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"html/template"
 	"log"
 	"net"
 	"net/http"
@@ -14,8 +15,10 @@ import (
 
 // Rewrite holds one rewrite body configuration.
 type Rewrite struct {
-	Regex       string `json:"regex,omitempty"`
-	Replacement string `json:"replacement,omitempty"`
+	Regex          string `json:"regex,omitempty"`
+	Replacement    string `json:"replacement,omitempty"`
+	DelimiterLeft  string `json:"delimiterLeft,omitempty"`
+	DelimiterRight string `json:"delimiterRight,omitempty"`
 }
 
 // Config holds the plugin configuration.
@@ -30,8 +33,10 @@ func CreateConfig() *Config {
 }
 
 type rewrite struct {
-	regex       *regexp.Regexp
-	replacement []byte
+	regex          *regexp.Regexp
+	replacement    string
+	delimiterLeft  string
+	delimiterRight string
 }
 
 type rewriteBody struct {
@@ -51,9 +56,19 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 			return nil, fmt.Errorf("error compiling regex %q: %w", rewriteConfig.Regex, err)
 		}
 
+		if rewriteConfig.DelimiterLeft == "" {
+			rewriteConfig.DelimiterLeft = "{"
+		}
+
+		if rewriteConfig.DelimiterRight == "" {
+			rewriteConfig.DelimiterRight = "}"
+		}
+
 		rewrites[i] = rewrite{
-			regex:       regex,
-			replacement: []byte(rewriteConfig.Replacement),
+			regex:          regex,
+			replacement:    rewriteConfig.Replacement,
+			delimiterLeft:  rewriteConfig.DelimiterLeft,
+			delimiterRight: rewriteConfig.DelimiterRight,
 		}
 	}
 
@@ -86,7 +101,19 @@ func (r *rewriteBody) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	for _, rewrite := range r.rewrites {
-		bodyBytes = rewrite.regex.ReplaceAll(bodyBytes, rewrite.replacement)
+		tpl, err := template.New("replace").Delims(rewrite.delimiterLeft, rewrite.delimiterRight).Parse(rewrite.replacement)
+		if err != nil {
+			return
+		}
+
+		var buf bytes.Buffer
+
+		err = tpl.Execute(&buf, req)
+		if err != nil {
+			return
+		}
+
+		bodyBytes = rewrite.regex.ReplaceAll(bodyBytes, buf.Bytes())
 	}
 
 	if _, err := rw.Write(bodyBytes); err != nil {

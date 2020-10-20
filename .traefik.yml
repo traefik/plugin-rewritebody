@@ -8,3 +8,9 @@ testData:
   rewrites:
     - regex: "bar"
       replacement: "foo"
+    - regex: "foo"
+      replacement: "{.Host}"
+    - regex: "bar"
+      replacement: "/.Host/"
+      delimiterLeft: "/"
+      delimiterRight: "/"
