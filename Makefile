@@ -10,6 +10,9 @@ lint:
 test:
 	go test -v -cover ./...
 
+yaegi_test:
+	yaegi test github.com/traefik/plugin-rewritebody
+
 vendor:
 	go mod vendor
 

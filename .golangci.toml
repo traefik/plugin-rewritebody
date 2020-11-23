@@ -35,6 +35,7 @@
     "bodyclose",
     "goerr113",
     "maligned",
+    "exhaustivestruct",
   ]
 
 [issues]

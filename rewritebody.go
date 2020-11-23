@@ -85,8 +85,8 @@ func (r *rewriteBody) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	for _, rewrite := range r.rewrites {
-		bodyBytes = rewrite.regex.ReplaceAll(bodyBytes, rewrite.replacement)
+	for _, rwt := range r.rewrites {
+		bodyBytes = rwt.regex.ReplaceAll(bodyBytes, rwt.replacement)
 	}
 
 	if _, err := rw.Write(bodyBytes); err != nil {
