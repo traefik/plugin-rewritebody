@@ -11,7 +11,7 @@ test:
 	go test -v -cover ./...
 
 yaegi_test:
-	yaegi test github.com/traefik/plugin-rewritebody
+	yaegi test -v .
 
 vendor:
 	go mod vendor
