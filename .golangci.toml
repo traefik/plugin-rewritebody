@@ -31,8 +31,13 @@
 [linters]
   enable-all = true
   disable = [
+    "scopelint", # deprecated
+    "golint", # deprecated
+    "interfacer", # deprecated
+    "maligned", # deprecated
     "bodyclose",
     "goerr113",
+    "wrapcheck",
     "maligned",
     "exhaustivestruct",
     "testpackage",
@@ -51,4 +56,4 @@
 
  [[issues.exclude-rules]]
     path = "(.+)_test.go"
-    linters = ["goconst", "funlen", "godot", "scopelint"]
+    linters = ["goconst", "funlen", "godot"]
