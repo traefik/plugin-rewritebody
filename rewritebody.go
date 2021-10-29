@@ -16,6 +16,7 @@ import (
 type Rewrite struct {
 	Regex       string `json:"regex,omitempty"`
 	Replacement string `json:"replacement,omitempty"`
+	ReplaceOnce bool   `json:"replaceOnce,omitempty"`
 }
 
 // Config holds the plugin configuration.
@@ -32,6 +33,7 @@ func CreateConfig() *Config {
 type rewrite struct {
 	regex       *regexp.Regexp
 	replacement []byte
+	replaceOnce bool
 }
 
 type rewriteBody struct {
@@ -54,6 +56,7 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 		rewrites[i] = rewrite{
 			regex:       regex,
 			replacement: []byte(rewriteConfig.Replacement),
+			replaceOnce: rewriteConfig.ReplaceOnce,
 		}
 	}
 
@@ -86,7 +89,14 @@ func (r *rewriteBody) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	for _, rwt := range r.rewrites {
-		bodyBytes = rwt.regex.ReplaceAll(bodyBytes, rwt.replacement)
+		if rwt.replaceOnce {
+			firstOccurence := rwt.regex.Find(bodyBytes)
+			if firstOccurence != nil {
+				bodyBytes = bytes.Replace(bodyBytes, firstOccurence, rwt.replacement, 1)
+			}
+		} else {
+			bodyBytes = rwt.regex.ReplaceAll(bodyBytes, rwt.replacement)
+		}
 	}
 
 	if _, err := rw.Write(bodyBytes); err != nil {
