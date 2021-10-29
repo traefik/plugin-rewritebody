@@ -171,3 +171,69 @@ func TestNew(t *testing.T) {
 		})
 	}
 }
+
+func TestReplaceOnce(t *testing.T) {
+	tests := []struct {
+		desc       string
+		rewrites   []Rewrite
+		resBody    string
+		expResBody string
+	}{
+		{
+			desc: "should replace only once",
+			rewrites: []Rewrite{
+				{
+					Regex:       "foo",
+					Replacement: "bar",
+					ReplaceOnce: true,
+				},
+			},
+			resBody:    "my foo is the best of foos",
+			expResBody: "my bar is the best of foos",
+		},
+		{
+			desc: "should replace every occurence",
+			rewrites: []Rewrite{
+				{
+					Regex:       "foo",
+					Replacement: "bar",
+				},
+			},
+			resBody:    "my foo is the best of foos",
+			expResBody: "my bar is the best of bars",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			config := &Config{
+				Rewrites: test.rewrites,
+			}
+
+			next := func(rw http.ResponseWriter, req *http.Request) {
+				rw.Header().Set("Content-Length", strconv.Itoa(len(test.resBody)))
+				rw.WriteHeader(http.StatusOK)
+
+				_, _ = fmt.Fprintf(rw, test.resBody)
+			}
+
+			_, err := New(context.Background(), nil, config, "rewriteBody")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			recorder := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
+
+			rewriteBody, err := New(context.Background(), http.HandlerFunc(next), config, "rewriteBody")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			rewriteBody.ServeHTTP(recorder, req)
+
+			if !bytes.Equal([]byte(test.expResBody), recorder.Body.Bytes()) {
+				t.Errorf("got body %q, want %q", recorder.Body.Bytes(), test.expResBody)
+			}
+		})
+	}
+}

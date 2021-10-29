@@ -20,7 +20,8 @@ by replacing a search regex by a replacement string.
 
 To configure the `Rewrite Body` plugin you should create a [middleware](https://docs.traefik.io/middlewares/overview/) in 
 your dynamic configuration as explained [here](https://docs.traefik.io/middlewares/overview/). The following example creates
-and uses the `rewritebody` middleware plugin to replace all foo occurences by bar in the HTTP response body.
+and uses the `rewritebody` middleware plugin to replace all foo occurences by bar and the first occurrence of baz by qux in
+the HTTP response body.
 
 If you want to apply some limits on the response body, you can chain this middleware plugin with the [Buffering middleware](https://docs.traefik.io/middlewares/buffering/) from Traefik.
 
@@ -41,6 +42,12 @@ If you want to apply some limits on the response body, you can chain this middle
     [[http.middlewares.rewrite-foo.plugin.rewritebody.rewrites]]
       regex = "foo"
       replacement = "bar"
+
+    # Rewrites only the first "baz" occurence by "qux"
+    [[http.middlewares.rewrite-foo.plugin.rewritebody.rewrites]]
+      regex = "baz"
+      replacement = "qux"
+      replaceOnce = true
 
 [http.services]
   [http.services.my-service]
