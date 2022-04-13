@@ -4,6 +4,7 @@ package plugin_rewritebody
 import (
 	"bufio"
 	"bytes"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"log"
@@ -92,6 +93,17 @@ func (r *rewriteBody) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if _, err := rw.Write(bodyBytes); err != nil {
 		log.Printf("unable to write rewrited body: %v", err)
 	}
+}
+
+func DecompressGzip(buffer bytes.Buffer) (buf []byte, err error) {
+	var bytes []byte
+	r, err := gzip.NewReader(&buffer)
+	if err != nil {
+		return bytes, err
+	}
+
+	r.Read(bytes)
+	return bytes, nil
 }
 
 type responseWriter struct {
