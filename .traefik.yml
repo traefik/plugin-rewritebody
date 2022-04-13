@@ -1,7 +1,7 @@
-displayName: Rewrite Body
-summary: Rewrites the HTTP response body by replacing a search regex by a replacement string.
+displayName: Rewrite Body Gzip
+summary: Built on top of Traefik Rewrite Body plugin to also support gzip decompress -> update -> recompress.
 type: middleware
-import: github.com/traefik/plugin-rewritebody
+import: github.com/packruler/plugin-rewritebody
 compatibility: TODO
 testData:
   lastModified: true
