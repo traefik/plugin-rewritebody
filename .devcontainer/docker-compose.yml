@@ -1,0 +1,28 @@
+# Version of docker-compose
+version: "3"
+
+# Containers we are going to run
+services:
+  go:
+    # The build parameters for this container.
+    build:
+      # Here we define that it should build from the current directory
+      context: ../
+      dockerfile: .devcontainer/Dockerfile
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    volumes:
+      - ../:/app:cached
+      - ~/.ssh:/home/vscode/.ssh:ro
+      - ~/.zshrc:/home/vscode/.zshrc
+      - ~/.oh-my-zsh:/home/vscode/.oh-my-zsh
+      - ~/.oh-my-zsh-custom:/home/vscode/.oh-my-zsh-custom
+      # - .zsh_history:/home/vscode/.zsh_history
+    command: /bin/sh -c "while sleep 10000; do :; done"
+
+# # Define the volumes
+# volumes:
+#   remote-workspace:
+#   build:
