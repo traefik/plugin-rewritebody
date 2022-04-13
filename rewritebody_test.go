@@ -93,13 +93,13 @@ func TestServeHTTP(t *testing.T) {
 				Rewrites:     test.rewrites,
 			}
 
-			next := func(rw http.ResponseWriter, req *http.Request) {
-				rw.Header().Set("Content-Encoding", test.contentEncoding)
-				rw.Header().Set("Last-Modified", "Thu, 02 Jun 2016 06:01:08 GMT")
-				rw.Header().Set("Content-Length", strconv.Itoa(len(test.resBody)))
-				rw.WriteHeader(http.StatusOK)
+			next := func(responseWriter http.ResponseWriter, req *http.Request) {
+				responseWriter.Header().Set("Content-Encoding", test.contentEncoding)
+				responseWriter.Header().Set("Last-Modified", "Thu, 02 Jun 2016 06:01:08 GMT")
+				responseWriter.Header().Set("Content-Length", strconv.Itoa(len(test.resBody)))
+				responseWriter.WriteHeader(http.StatusOK)
 
-				_, _ = fmt.Fprintf(rw, test.resBody)
+				_, _ = fmt.Fprintf(responseWriter, test.resBody)
 			}
 
 			rewriteBody, err := New(context.Background(), http.HandlerFunc(next), config, "rewriteBody")
