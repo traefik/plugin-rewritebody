@@ -74,11 +74,17 @@ func (r *rewriteBody) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	r.next.ServeHTTP(wrappedWriter, req)
 
+	isGzip, err := wrappedWriter.DecompressBody()
+
+	if err != nil {
+		log.Printf("unable to read body: %v", err)
+	}
+
 	bodyBytes := wrappedWriter.buffer.Bytes()
 
 	contentEncoding := wrappedWriter.Header().Get("Content-Encoding")
 
-	if contentEncoding != "" && contentEncoding != "identity" {
+	if !isGzip && contentEncoding != "" && contentEncoding != "identity" {
 		if _, err := rw.Write(bodyBytes); err != nil {
 			log.Printf("unable to write body: %v", err)
 		}
@@ -90,20 +96,50 @@ func (r *rewriteBody) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		bodyBytes = rwt.regex.ReplaceAll(bodyBytes, rwt.replacement)
 	}
 
-	if _, err := rw.Write(bodyBytes); err != nil {
+	preparedBody := PrepareBodyBytes(bodyBytes, isGzip)
+
+	if _, err := rw.Write(preparedBody); err != nil {
 		log.Printf("unable to write rewrited body: %v", err)
 	}
 }
 
-func DecompressGzip(buffer bytes.Buffer) (buf []byte, err error) {
-	var bytes []byte
-	r, err := gzip.NewReader(&buffer)
-	if err != nil {
-		return bytes, err
+func (wrappedWriter *responseWriter) DecompressBody() (isGzip bool, err error) {
+	contentEncoding := wrappedWriter.Header().Get("Content-Encoding")
+
+	if contentEncoding != "gzip" {
+		return false, nil
 	}
 
-	r.Read(bytes)
-	return bytes, nil
+	var bytes []byte
+	r, err := gzip.NewReader(&wrappedWriter.buffer)
+	if err != nil {
+		return true, err
+	}
+
+	_, err = r.Read(bytes)
+	return true, err
+}
+
+func PrepareBodyBytes(bodyBytes []byte, isGzip bool) (b []byte) {
+	if !isGzip {
+		return bodyBytes
+	}
+
+	var buf bytes.Buffer
+	zw := gzip.NewWriter(&buf)
+
+	if _, err := zw.Write(bodyBytes); err != nil {
+		log.Printf("unable to recompress rewrited body: %v", err)
+		return bodyBytes
+	}
+
+	if err := zw.Close(); err != nil {
+		log.Printf("unable to close gzip writer: %v", err)
+		return bodyBytes
+	}
+
+	return buf.Bytes()
+
 }
 
 type responseWriter struct {

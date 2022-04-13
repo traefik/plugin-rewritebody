@@ -54,7 +54,7 @@ func TestServeHTTP(t *testing.T) {
 					Replacement: "bar",
 				},
 			},
-			contentEncoding: "gzip",
+			contentEncoding: "other",
 			resBody:         "foo is the new bar",
 			expResBody:      "foo is the new bar",
 		},
