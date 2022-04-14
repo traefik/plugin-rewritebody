@@ -100,7 +100,6 @@ func (bodyRewrite *rewriteBody) ServeHTTP(response http.ResponseWriter, req *htt
 	}
 
 	bodyBytes := wrappedWriter.decompressBody(isGzip)
-	log.Printf("Body bytes: %s", bodyBytes)
 
 	for _, rwt := range bodyRewrite.rewrites {
 		bodyBytes = rwt.regex.ReplaceAll(bodyBytes, rwt.replacement)
@@ -115,8 +114,6 @@ func (bodyRewrite *rewriteBody) ServeHTTP(response http.ResponseWriter, req *htt
 
 func (wrappedWriter *responseWriter) decompressBody(isGzip bool) (bodyBytes []byte) {
 	if !isGzip {
-		log.Printf("Non-gzip: %s", wrappedWriter.buffer.Bytes())
-
 		return wrappedWriter.buffer.Bytes()
 	}
 
@@ -142,8 +139,6 @@ func (wrappedWriter *responseWriter) decompressBody(isGzip bool) (bodyBytes []by
 
 		return wrappedWriter.buffer.Bytes()
 	}
-
-	log.Printf("Read bytes: %s", bodyBytes)
 
 	return bodyBytes
 }
