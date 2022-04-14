@@ -7,11 +7,20 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
 	"regexp"
+	"strings"
 )
+
+// var (
+// 	// LoggerINFO Main logger
+// 	LoggerINFO = log.New(ioutil.Discard, "INFO: Fail2Ban: ", log.Ldate|log.Ltime|log.Lshortfile)
+// 	// LoggerDEBUG debug logger
+// 	LoggerDEBUG = log.New(ioutil.Discard, "DEBUG: Fail2Ban: ", log.Ldate|log.Ltime|log.Lshortfile)
+// )
 
 // Rewrite holds one rewrite body configuration.
 type Rewrite struct {
@@ -74,22 +83,24 @@ func (bodyRewrite *rewriteBody) ServeHTTP(response http.ResponseWriter, req *htt
 
 	bodyRewrite.next.ServeHTTP(wrappedWriter, req)
 
-	isGzip, err := wrappedWriter.decompressBody()
-	if err != nil {
-		log.Printf("unable to read body: %v", err)
-	}
-
-	bodyBytes := wrappedWriter.buffer.Bytes()
+	// bodyBytes := wrappedWriter.buffer.Bytes()
 
 	contentEncoding := wrappedWriter.Header().Get("Content-Encoding")
+	contentType := strings.ToLower(wrappedWriter.Header().Get("Content-Type"))
+	isText := contentType == "" || strings.Contains(contentType, "text")
 
-	if !isGzip && contentEncoding != "" && contentEncoding != "identity" {
-		if _, err := response.Write(bodyBytes); err != nil {
+	isGzip := contentEncoding == "gzip"
+
+	if !isText || (!isGzip && contentEncoding != "" && contentEncoding != "identity") {
+		if _, err := response.Write(wrappedWriter.buffer.Bytes()); err != nil {
 			log.Printf("unable to write body: %v", err)
 		}
 
 		return
 	}
+
+	bodyBytes := wrappedWriter.decompressBody(isGzip)
+	log.Printf("Body bytes: %s", bodyBytes)
 
 	for _, rwt := range bodyRewrite.rewrites {
 		bodyBytes = rwt.regex.ReplaceAll(bodyBytes, rwt.replacement)
@@ -102,23 +113,39 @@ func (bodyRewrite *rewriteBody) ServeHTTP(response http.ResponseWriter, req *htt
 	}
 }
 
-func (wrappedWriter *responseWriter) decompressBody() (isGzip bool, err error) {
-	contentEncoding := wrappedWriter.Header().Get("Content-Encoding")
+func (wrappedWriter *responseWriter) decompressBody(isGzip bool) (bodyBytes []byte) {
+	if !isGzip {
+		log.Printf("Non-gzip: %s", wrappedWriter.buffer.Bytes())
 
-	if contentEncoding != "gzip" {
-		return false, nil
+		return wrappedWriter.buffer.Bytes()
 	}
 
-	var bytes []byte
-
-	r, err := gzip.NewReader(&wrappedWriter.buffer)
+	zReader, err := gzip.NewReader(&wrappedWriter.buffer)
 	if err != nil {
-		return true, err
+		log.Printf("Failed to load body reader: %v", err)
+
+		return wrappedWriter.buffer.Bytes()
 	}
 
-	_, err = r.Read(bytes)
+	bodyBytes, err = io.ReadAll(zReader)
 
-	return true, err
+	if err != nil {
+		log.Printf("Failed to read body: %v", err)
+
+		return wrappedWriter.buffer.Bytes()
+	}
+
+	err = zReader.Close()
+
+	if err != nil {
+		log.Printf("Failed to close reader: %v", err)
+
+		return wrappedWriter.buffer.Bytes()
+	}
+
+	log.Printf("Read bytes: %s", bodyBytes)
+
+	return bodyBytes
 }
 
 func prepareBodyBytes(bodyBytes []byte, isGzip bool) (b []byte) {
