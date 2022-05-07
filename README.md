@@ -1,7 +1,6 @@
 # Rewrite Body
 
-Rewrite body is a middleware plugin for [Traefik](https://github.com/traefik/traefik) which rewrites the HTTP response body
-by replacing a search regex by a replacement string.
+Rewrite body is a middleware plugin for [Traefik](https://github.com/traefik/traefik) which rewrites the HTTP response body by replacing a search regex by a replacement string.
 
 ## Configuration
 
@@ -18,11 +17,11 @@ by replacing a search regex by a replacement string.
 
 ### Dynamic
 
-To configure the `Rewrite Body` plugin you should create a [middleware](https://docs.traefik.io/middlewares/overview/) in 
-your dynamic configuration as explained [here](https://docs.traefik.io/middlewares/overview/). The following example creates
-and uses the `rewritebody` middleware plugin to replace all foo occurences by bar in the HTTP response body.
+To configure the `Rewrite Body` plugin you should create a [middleware](https://doc.traefik.io/traefik/middlewares/overview/) in 
+your dynamic configuration as explained [here](https://doc.traefik.io/traefik/middlewares/overview/).
+The following example creates  and uses the `rewritebody` middleware plugin to replace all `foo` occurrences by `bar` in the HTTP response body.
 
-If you want to apply some limits on the response body, you can chain this middleware plugin with the [Buffering middleware](https://docs.traefik.io/middlewares/buffering/) from Traefik.
+If you want to apply some limits on the response body, you can chain this middleware plugin with the [Buffering middleware](https://doc.traefik.io/traefik/middlewares/http/buffering/) from Traefik.
 
 ```toml
 [http.routers]
