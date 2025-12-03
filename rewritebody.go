@@ -74,6 +74,9 @@ func (r *rewriteBody) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	r.next.ServeHTTP(wrappedWriter, req)
 
 	bodyBytes := wrappedWriter.buffer.Bytes()
+	if len(bodyBytes) == 0 {
+		return
+	}
 
 	contentEncoding := wrappedWriter.Header().Get("Content-Encoding")
 
